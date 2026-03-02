@@ -14,37 +14,23 @@ variables:
 
 steps:
 
-# Install dependencies
 - script: |
     sudo apt update
-    sudo apt install -y openjdk-17-jdk unzip git curl
+    sudo apt install -y openjdk-17-jdk maven git curl
     java -version
-  displayName: 'Install Java and Tools'
+    mvn -version
+  displayName: 'Install Java & Maven'
 
-# Verify SonarQube server is reachable
-- script: |
-    echo "Checking SonarQube server status..."
-    curl -v $(SONAR_HOST_URL)/api/system/status
-  displayName: 'Check SonarQube Connectivity'
-
-# Clone public repository for testing
 - script: |
     git clone https://github.com/spring-projects/spring-petclinic.git
     cd spring-petclinic
-    ls -la
-  displayName: 'Clone Public GitHub Repo'
+    mvn clean install -DskipTests
+  displayName: 'Build Project (Generate .class files)'
 
-# Download and run SonarScanner
 - script: |
-    wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-    unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-    export PATH=$(pwd)/sonar-scanner-5.0.1.3006-linux/bin:$PATH
-
     cd spring-petclinic
-
-    sonar-scanner -X \
+    mvn sonar:sonar \
       -Dsonar.projectKey=$(SONAR_PROJECT_KEY) \
-      -Dsonar.sources=. \
       -Dsonar.host.url=$(SONAR_HOST_URL) \
       -Dsonar.login=$(SONAR_TOKEN)
   env:
